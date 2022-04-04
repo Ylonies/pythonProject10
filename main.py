@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from werkzeug.utils import redirect
 
 from data import db_session
+from data.jobs import Jobs
 from data.users import User
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -22,15 +23,13 @@ def add_user(params):
     db_sess.add(user)
     db_sess.commit()
 
+@app.route("/")
 def main():
     db_session.global_init("db/mars_explorer.db")
-    add_user(["Scott", "Ridley", 21, "captain", "research engineer", "module_1", "scott_chief@mars.org", "cap"])
-    add_user(["Green", "Lucy", 30, "captain helper", "research engineer", "module_1", "lucy_thebest@mars.org", "best"])
-    add_user(["Black", "Saimon", 25, "usual worker", "scientist", "module_1", "black@mars.org", "saimon"])
-    add_user(["Gagarina", "Polina", 50, "usual worker", "chief", "module_1", "gagrin@mars.org", "space"])
-    app.run()
-
+    db_sess = db_session.create_session()
+    jobs = db_sess.query(Jobs).all()
+    return render_template("index.html", jobs = jobs)
 
 if __name__ == '__main__':
-    main()
+    app.run(port=5000, host='127.0.0.2')
 
