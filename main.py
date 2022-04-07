@@ -1,11 +1,13 @@
 from flask import Flask, render_template
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import redirect
+from wtforms import SelectField
 
 from data import db_session
 from data.jobs import Jobs
 from data.login import LoginForm
 from data.users import User
+from forms.jobs import JobsForm
 from forms.users import RegisterForm
 
 app = Flask(__name__)
@@ -74,6 +76,31 @@ def login():
 def logout():
     logout_user()
     return redirect("/")
+
+
+
+@app.route('/jobs',  methods=['GET', 'POST'])
+@login_required
+def add_jobs():
+    db_sess = db_session.create_session()
+    users = db_sess.query(User).all()
+    form = JobsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        jobs = Jobs()
+        jobs.job = form.job.data
+        jobs.work_size = form.work_size.data
+        jobs.team_leader = form.team_leader.data
+        jobs.collaborators = form.collaborators.data
+        jobs.is_finished = form.is_finished.data
+        current_user.jobs.append(jobs)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('jobs.html', title='Добавление новости',
+                           form=form)
+
+
 
 if __name__ == '__main__':
     db_session.global_init("db/mars_explorer.db")
