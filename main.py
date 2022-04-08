@@ -1,9 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from requests import get
 from werkzeug.utils import redirect
 from wtforms import SelectField
 
-from data import db_session
+
+from data import db_session, jobs_api
 from data.jobs import Jobs
 from data.login import LoginForm
 from data.users import User
@@ -100,9 +102,17 @@ def add_jobs():
     return render_template('jobs.html', title='Добавление новости',
                            form=form)
 
+from flask import make_response
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+    app.run()
 
 
 if __name__ == '__main__':
     db_session.global_init("db/mars_explorer.db")
-    app.run(port=5000, host='127.0.0.2')
+    app.register_blueprint(jobs_api.blueprint)
+    app.run(port=5000, host='127.0.0.1')
 
