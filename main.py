@@ -1,11 +1,12 @@
 from flask import Flask, render_template, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_restful import Api
 from requests import get
 from werkzeug.utils import redirect
 from wtforms import SelectField
 
 
-from data import db_session, jobs_api
+from data import db_session, jobs_api, users_resource
 from data.jobs import Jobs
 from data.login import LoginForm
 from data.users import User
@@ -14,6 +15,8 @@ from forms.users import RegisterForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+api = Api(app)
+
 
 @app.route("/")
 def main():
@@ -104,15 +107,13 @@ def add_jobs():
 
 from flask import make_response
 
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
-    app.run()
 
 
 if __name__ == '__main__':
     db_session.global_init("db/mars_explorer.db")
     db_sess = db_session.create_session()
     app.register_blueprint(jobs_api.blueprint)
+    api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+    api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
     app.run(port=5000, host='127.0.0.1')
 
